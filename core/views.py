@@ -1,3 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-# Create your views here.
+def home(request):
+    return render(request, 'core/home.html')
+
+def anime_detail(request):
+    return redirect('core:home')
+
+def process_image(request):
+    return redirect('core:home')

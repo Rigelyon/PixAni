@@ -16,11 +16,9 @@
                 <form method="post" action="{% url 'core:anime_detail' %}">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <div class="input-group">
-                            {% comment %} <span class="input-group-text bg-dark text-light border-dark">
-                                <i class="fas fa-link"></i>
-                            </span> {% endcomment %}
+                        <div class="input-group position-relative">
                             {{ form.anilist_search }}
+                            <ul class="dropdown-menu w-100 position-absolute" id="searchSuggestions" style="display: none; z-index: 1050; background-color: var(--dark-bg); color: #fff; border: 1px solid var(--primary-color); top: calc(100% + 5px);"></ul>
                         </div>
                         <div class="form-text text-muted">
                         </div>
@@ -53,4 +51,70 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.querySelector('[name="anilist_search"]');
+        const suggestionsDropdown = document.getElementById('searchSuggestions');
+
+        searchInput.addEventListener('input', function () {
+            const query = searchInput.value.trim();
+            if (query.length > 2) {
+                fetch(`anime_search/?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsDropdown.innerHTML = '';
+                        if (data.results.length > 0) {
+                            data.results.forEach(anime => {
+                                const li = document.createElement('li');
+                                li.classList.add('dropdown-item', 'd-flex', 'align-items-center');
+                                li.style.color = '#fff';
+                                li.style.backgroundColor = 'transparent';
+                                li.style.cursor = 'pointer';
+
+                                // Create thumbnail image
+                                const img = document.createElement('img');
+                                img.src = anime.cover; 
+                                img.alt = anime.title; 
+                                img.style.height = '50px';
+                                img.style.width = 'auto';
+                                img.style.objectFit = 'cover';
+                                img.style.borderRadius = '5px';
+                                img.style.marginRight = '10px';
+
+                                li.addEventListener('mouseover', () => {
+                                    li.style.backgroundColor = 'var(--primary-light)';
+                                });
+                                li.addEventListener('mouseout', () => {
+                                    li.style.backgroundColor = 'transparent';
+                                });
+
+                                li.addEventListener('click', () => {
+                                    searchInput.value = anime.title;
+                                    suggestionsDropdown.style.display = 'none';
+                                });
+
+                                li.appendChild(img);
+                                li.appendChild(document.createTextNode(anime.title));
+
+                                suggestionsDropdown.appendChild(li);
+                            });
+                            suggestionsDropdown.style.display = 'block';
+                        } else {
+                            suggestionsDropdown.style.display = 'none';
+                        }
+                    })
+                    .catch(error => console.error('Error fetching suggestions:', error));
+            } else {
+                suggestionsDropdown.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
+                suggestionsDropdown.style.display = 'none';
+            }
+        });
+    });
+</script>
 {% endblock %}

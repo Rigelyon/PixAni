@@ -10,7 +10,8 @@ from io import BytesIO
 from PIL import Image
 
 from core.forms import AnilistLinkForms, UserDataForm
-from core.utils.anilist import get_anime_data
+from core.utils import anilist
+from core.utils.anilist import get_anime_data, search_suggestions
 from core.utils.steganography import embed_data_in_image
 
 def home(request):
@@ -125,3 +126,10 @@ def process_image(request):
         'success': False,
         'message': 'Invalid request method.'
     }, status=405)
+
+def anime_search(request):
+    query = request.GET.get('query', '')
+    results = search_suggestions(query)
+    if results:
+        return JsonResponse({'results': results})
+    return JsonResponse({'results': []})

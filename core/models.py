@@ -1,7 +1,7 @@
 from django.db import models
 
 class AnimeRecord(models.Model):
-    anilist_id = models.IntegerField(max_length=255, unique=True)
+    anilist_id = models.IntegerField(unique=True)
     tittle_native = models.CharField(max_length=255)
     tittle_english = models.CharField(max_length=255)
     tittle_romaji = models.CharField(max_length=255)

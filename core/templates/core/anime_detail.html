@@ -1,0 +1,197 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none" style="color: var(--primary-color);">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ anime.title.romaji }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <img src="{{ anime.coverImage }}" alt="{{ anime.title.romaji }}" class="img-fluid cover-image mb-3" id="cover-image">
+                <h5 class="card-title mb-3">{{ anime.title.romaji }}</h5>
+                
+                {% if anime.title.native %}
+                    <p class="text-muted mb-2">{{ anime.title.native }}</p>
+                {% endif %}
+                
+                {% if anime.title.english and anime.title.english != anime.title.romaji %}
+                    <p class="text-muted mb-3">{{ anime.title.english }}</p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge">{{ anime.type }}</span>
+                    {% if anime.episodes %}
+                        <span class="badge">{{ anime.episodes }} Episodes</span>
+                    {% endif %}
+                    {% if anime.year %}
+                        <span class="badge">{{ anime.year }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if anime.rating %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-star me-2" style="color: gold;"></i>
+                            <span>{{ anime.rating|floatformat:1 }} / 10</span>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    {% for genre in anime.genres %}
+                        <span class="badge me-1 mb-1">{{ genre }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between small text-muted">
+                    {% if anime.studio %}
+                        <span><i class="fas fa-video me-1"></i> {{ anime.studio }}</span>
+                    {% endif %}
+                    {% if anime.source %}
+                        <span><i class="fas fa-book me-1"></i> {{ anime.source }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Synopsis</h5>
+                        <p class="card-text">{{ anime.synopsis|safe }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Add Your Data</h5>
+                        <p class="text-muted small mb-4">This information will be embedded in the image using steganography</p>
+                        
+                        <form id="userDataForm">
+                            {% csrf_token %}
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ user_data_form.personal_rating.id_for_label }}" class="form-label">Personal Rating</label>
+                                    {{ user_data_form.personal_rating }}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ user_data_form.review.id_for_label }}" class="form-label">Your Review</label>
+                                {{ user_data_form.review }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ user_data_form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ user_data_form.notes }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ user_data_form.download_link_1080p.id_for_label }}" class="form-label">1080p Download Link</label>
+                                {{ user_data_form.download_link_1080p }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ user_data_form.download_link_720p.id_for_label }}" class="form-label">720p Download Link</label>
+                                {{ user_data_form.download_link_720p }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ user_data_form.download_link_480p.id_for_label }}" class="form-label">480p Download Link</label>
+                                {{ user_data_form.download_link_480p }}
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="processButton">
+                                    <i class="fas fa-download me-2"></i> Process & Download
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div id="processingMessage" class="text-center my-3 d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Processing image... This may take a moment.</p>
+                        </div>
+                        
+                        <div id="downloadSection" class="text-center my-3 d-none">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i> Data successfully embedded in image!
+                            </div>
+                            <a href="#" id="downloadLink" class="btn btn-success">
+                                <i class="fas fa-download me-2"></i> Download Image
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userDataForm = document.getElementById('userDataForm');
+        const processingMessage = document.getElementById('processingMessage');
+        const downloadSection = document.getElementById('downloadSection');
+        const downloadLink = document.getElementById('downloadLink');
+        const processButton = document.getElementById('processButton');
+        
+        userDataForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show processing message
+            processingMessage.classList.remove('d-none');
+            processButton.disabled = true;
+            
+            // Collect form data
+            const formData = new FormData(userDataForm);
+            
+            // Send request to server
+            fetch('{% url "core:process_image" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide processing message
+                processingMessage.classList.add('d-none');
+                
+                if (data.success) {
+                    // Show download section
+                    downloadSection.classList.remove('d-none');
+                    
+                    // Set download link
+                    downloadLink.href = data.download_url;
+                    downloadLink.download = data.download_url.split('/').pop();
+                } else {
+                    alert('Error: ' + data.error);
+                    processButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                processingMessage.classList.add('d-none');
+                alert('Error: ' + error);
+                processButton.disabled = false;
+            });
+        });
+    });
+</script>
+{% endblock %}

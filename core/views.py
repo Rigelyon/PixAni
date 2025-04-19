@@ -12,7 +12,8 @@ from PIL import Image
 from core.forms import AnilistLinkForms, UserDataForm
 from core.utils import anilist
 from core.utils.anilist import get_anime_data, search_suggestions
-from core.utils.steganography import embed_data_in_image
+from core.utils.steganography import embed_data_in_image, decode_data_from_image
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 def home(request):
     form = AnilistLinkForms()
@@ -122,6 +123,36 @@ def process_image(request):
                 'errors': user_data_form.errors
             }, status=400)
         
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method.'
+    }, status=405)
+
+@csrf_exempt
+def decode_image(request):
+    if request.method == 'POST':
+        try:
+            uploaded_file = request.FILES.get('image')
+            if not isinstance(uploaded_file, InMemoryUploadedFile):
+                return JsonResponse({'success': False, 'error': 'Invalid file upload'}, status=400)
+
+            image = Image.open(uploaded_file)
+            decoded_data = decode_data_from_image(image)
+
+            anime_title = decoded_data['anime']['title']['english']
+            anime_data = get_anime_data(anime_title)
+            if not anime_data:
+                return JsonResponse({'success': False, 'error': 'Failed to refetch anime data from AniList'}, status=500)
+
+            user_data = decoded_data.get('user_data', {})
+            return JsonResponse({
+                'success': True,
+                'anime_data': anime_data,
+                'user_data': user_data
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
     return JsonResponse({
         'success': False,
         'message': 'Invalid request method.'

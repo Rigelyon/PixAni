@@ -16,7 +16,7 @@
     <div class="col-md-4 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
-                <img src="{{ anime.cover.extraLarge }}" alt="{{ anime.title.english }}" class="img-fluid cover-image mb-3" id="cover-image">
+                <img src="{{ anime.cover }}" alt="{{ anime.title.english }}" class="img-fluid cover-image mb-3" id="cover-image">
                 <h5 class="card-title mb-3">{{ anime.title.english }}</h5>
                 
                 {% if anime.title.native %}
@@ -130,6 +130,9 @@
                                 <button type="button" class="btn btn-secondary" id="downloadTxtButton">
                                     <i class="fas fa-file-alt me-2"></i> Download as TXT
                                 </button>
+                                <button type="button" class="btn btn-secondary" id="decodeImageButton" data-bs-toggle="modal" data-bs-target="#decodeImageModal">
+                                    <i class="fas fa-upload me-2"></i> Decode Image
+                                </button>
                             </div>
                         </form>
                         
@@ -167,6 +170,36 @@
             </div>
             <div class="modal-footer card-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for decoding image -->
+<div class="modal fade" id="decodeImageModal" tabindex="-1" aria-labelledby="decodeImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content card">
+            <div class="modal-header card-header">
+                <h5 class="card-title" id="decodeImageModalLabel">Decode Embedded Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body card-body">
+                <form id="decodeImageForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="imageUpload" class="form-label">Upload Image</label>
+                        <input type="file" class="form-control" id="imageUpload" name="image" accept="image/*" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i> Decode
+                        </button>
+                    </div>
+                </form>
+                <div id="decodedData" class="mt-3 d-none">
+                    <h6>Decoded Data:</h6>
+                    <pre class="bg-light p-3 rounded" style="background-color: var(--secondary-color); color: var(--primary-color);"></pre>
+                </div>
             </div>
         </div>
     </div>
@@ -297,6 +330,42 @@
             a.click();
 
             URL.revokeObjectURL(url);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const decodeImageForm = document.getElementById('decodeImageForm');
+        const decodedDataContainer = document.getElementById('decodedData');
+        const decodedDataPre = decodedDataContainer.querySelector('pre');
+
+        decodeImageForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(decodeImageForm);
+
+            fetch('{% url "core:decode_image" %}', {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const userData = data.user_data;
+                        document.querySelector('[name="personal_rating"]').value = userData.personal_rating || '';
+                        document.querySelector('[name="review"]').value = userData.review || '';
+                        document.querySelector('[name="notes"]').value = userData.notes || '';
+                        document.querySelector('[name="download_link_1080p"]').value = userData.download_link_1080p || '';
+                        document.querySelector('[name="download_link_720p"]').value = userData.download_link_720p || '';
+                        document.querySelector('[name="download_link_480p"]').value = userData.download_link_480p || '';
+                        document.querySelector('[name="download_link_360p"]').value = userData.download_link_360p || '';
+                        alert('User data successfully populated from the image!');
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
         });
     });
 </script>

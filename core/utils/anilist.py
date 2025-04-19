@@ -66,9 +66,7 @@ def get_anime_data(anime_title):
           'studio': studio_name,
           'rating': media['averageScore'] / 10 if media['averageScore'] else None,
           'source': media['source'],
-          'cover': {
-              'extraLarge': media['coverImage']['extraLarge'],
-          }
+          'cover': media['coverImage']['extraLarge'],
       }
 
       return formatted_data

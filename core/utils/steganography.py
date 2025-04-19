@@ -164,3 +164,73 @@ def embed_data_in_image(image, data_str):
         new_image = embedded_image
     
     return new_image
+
+def decode_data_from_image(image):
+    """
+    Decode data from an image using a combination of DCT and DWT
+    """
+    def extract_dct_data(image_array):
+        """
+        Extract data from image using DCT method
+        """
+        height, width = image_array.shape
+        h_blocks = height // 8
+        w_blocks = width // 8
+        binary_data = ''
+
+        for i in range(h_blocks):
+            for j in range(w_blocks):
+                block = image_array[i*8:(i+1)*8, j*8:(j+1)*8]
+                dct_block = dct(dct(block.T, norm='ortho').T, norm='ortho')
+                bit = int(dct_block[7, 7]) % 2
+                binary_data += str(bit)
+                if binary_data.endswith('00000000'):
+                    break
+            if binary_data.endswith('00000000'):
+                break
+
+        return binary_data
+
+    def extract_dwt_data(image_array):
+        """
+        Extract data from image using DWT method
+        """
+        coeffs = pywt.dwt2(image_array, 'haar')
+        _, (_, _, cD) = coeffs
+        flat_cD = cD.flatten()
+        binary_data = ''
+
+        for coeff in flat_cD:
+            bit = int(coeff) % 2
+            binary_data += str(bit)
+            if binary_data.endswith('00000000'):
+                break
+
+        return binary_data
+
+    # Convert image to grayscale and get numpy array
+    if image.mode != 'L':
+        gray_image = image.convert('L')
+    else:
+        gray_image = image
+
+    image_array = np.array(gray_image)
+
+    try:
+        # Try extracting data using DCT
+        binary_data = extract_dct_data(image_array)
+    except Exception:
+        # If DCT fails, try DWT
+        binary_data = extract_dwt_data(image_array)
+
+    # Convert binary data to string
+    byte_data = [binary_data[i:i+8] for i in range(0, len(binary_data), 8)]
+    decoded_data = ''.join([chr(int(byte, 2)) for byte in byte_data if byte != '00000000'])
+
+    # Verify and extract the signature
+    if decoded_data.startswith("PIXANI_DATA:"):
+        encoded_data = decoded_data[len("PIXANI_DATA:"):]
+        data_str = base64.b64decode(encoded_data).decode('utf-8')
+        return json.loads(data_str)
+    else:
+        raise ValueError("No valid embedded data found in the image")

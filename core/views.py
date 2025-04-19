@@ -1,9 +1,17 @@
+import json
+import os
+from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
+import requests
+from io import BytesIO
+from PIL import Image
 
 from core.forms import AnilistLinkForms, UserDataForm
 from core.utils.anilist import get_anime_data
+from core.utils.new_steganography import embed_data_in_image
 
 def home(request):
     form = AnilistLinkForms()
@@ -40,4 +48,78 @@ def anime_detail(request):
 
 @csrf_exempt
 def process_image(request):
-    return redirect('core:home')
+    if request.method == 'POST':
+        anime_data = request.session.get('anime_data')
+        if not anime_data:
+            messages.error(request, 'No anime data found in session.', status=400)
+            return redirect('core:home')
+        
+        user_data_form = UserDataForm(request.POST)
+        if user_data_form.is_valid():
+            user_data = {
+                'personal_rating': user_data_form.cleaned_data.get('personal_rating'),
+                'review': user_data_form.cleaned_data.get('review'),
+                'notes': user_data_form.cleaned_data.get('notes'),
+                'download_link_1080p': user_data_form.cleaned_data.get('download_link_1080p'),
+                'download_link_720p': user_data_form.cleaned_data.get('download_link_720p'),
+                'download_link_480p': user_data_form.cleaned_data.get('download_link_480p'),
+                'download_link_360p': user_data_form.cleaned_data.get('download_link_360p'),
+            }
+
+            data_to_embed = {
+                'anime': {
+                    'id': anime_data['id'],
+                    'title': {
+                        'english': anime_data['title']['english'],
+                        'native': anime_data['title']['native'],
+                        'romaji': anime_data['title']['romaji']
+                    },
+                    'synopsis': anime_data['description'],
+                    'type': anime_data['type'],
+                    'episodes': anime_data['episodes'],
+                    'year': anime_data['seasonYear'],
+                    'genres': anime_data['genres'],
+                    'studio': anime_data['studio'],
+                    'rating': anime_data['rating'],
+                    'source': anime_data['source'],
+                },
+                'user_data': user_data
+            }
+
+            try:
+                response = requests.get(anime_data['cover'])
+                cover = Image.open(BytesIO(response.content))
+
+                filename = f"{anime_data['title']['english'].replace(' ', '_')}_cover.png"
+
+                os.makedirs(os.path.join(settings.MEDIA_ROOT, 'embedded_images'), exist_ok=True)
+
+                temp_path = os.path.join(settings.MEDIA_ROOT, 'embedded_images', filename)
+                download_path = os.path.join('media', 'embedded_images', filename)
+
+                data_str = json.dumps(data_to_embed)
+                # embedded_images = embed_data_in_image(cover, data_str)
+
+                # embedded_images.save(temp_path, format='PNG')
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Data embedded successfully.',
+                    'download_link': download_path,
+                    'anime_data': anime_data,
+                    'user_data': user_data
+                })
+
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid form data.',
+                'errors': user_data_form.errors
+            }, status=400)
+        
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method.'
+    }, status=405)

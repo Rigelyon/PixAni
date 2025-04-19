@@ -1,0 +1,56 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold gradient-text">PixAni</h1>
+            <p class="lead text-light">Download anime covers with embedded metadata using steganography</p>
+            <hr class="my-4" style="background: linear-gradient(to right, transparent, #6c63ff, transparent); height: 2px; border: none;">
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Enter Anilist URL</h2>
+                
+                <form method="post" action="{% url 'core:anime_detail' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-light border-dark">
+                                <i class="fas fa-link"></i>
+                            </span>
+                            {{ form.anilist_url }}
+                        </div>
+                        <div class="form-text text-muted">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i> Get Anime Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="card-title">About PixAni</h3>
+                    <p>PixAni allows you to:</p>
+                    <ul>
+                        <li>Fetch anime information from Anilist</li>
+                        <li>Preview anime cover images and details</li>
+                        <li>Add your personal ratings, reviews, and download links</li>
+                        <li>Embed all this information into the cover image using advanced steganography (DCT/DWT)</li>
+                        <li>Download the image with hidden metadata</li>
+                    </ul>
+                    <p class="mb-0">Enter an Anilist URL above to get started!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

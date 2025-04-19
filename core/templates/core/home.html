@@ -11,16 +11,16 @@
         
         <div class="card">
             <div class="card-body p-4">
-                <h2 class="card-title text-center mb-4">Enter Anilist URL</h2>
+                <h2 class="card-title text-center mb-4">Enter Anime Title</h2>
                 
                 <form method="post" action="{% url 'core:anime_detail' %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <div class="input-group">
-                            <span class="input-group-text bg-dark text-light border-dark">
+                            {% comment %} <span class="input-group-text bg-dark text-light border-dark">
                                 <i class="fas fa-link"></i>
-                            </span>
-                            {{ form.anilist_url }}
+                            </span> {% endcomment %}
+                            {{ form.anilist_search }}
                         </div>
                         <div class="form-text text-muted">
                         </div>

@@ -3,66 +3,102 @@ import requests
 from io import BytesIO
 import numpy as np
 
-from steganography import embed_to_image
-from steganography import extract_message
-# API endpoint
-url = 'https://graphql.anilist.co'
+# from new_steganography import embed_to_image
+# from new_steganography import extract_message
 
-# GraphQL query to search for an anime by title
-query = '''
-query ($search: String) {
-  Media(search: $search, type: ANIME) {
-    title {
-      romaji
-      english
+def get_anime_data(anime_title):
+    url = 'https://graphql.anilist.co'
+
+    query = '''
+    query ($search: String) {
+        Media(search: $search, type: ANIME) {
+          id
+          title {
+            romaji
+            english
+            native
+          }
+          type
+          episodes
+          seasonYear
+          genres
+          description
+          averageScore
+          coverImage {
+            extraLarge
+          }
+          studios {
+            nodes {
+              name
+            }
+        }
+        source
+      }
     }
-    coverImage {
-      large
-      medium
+    '''
+
+    variables = {
+        'search': anime_title
     }
-  }
-}
-'''
 
-variables = {
-    'search': 'Naruto'
-}
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
 
-headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-}
+    try:
+      response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
+      data = response.json()
+      media = data['data']['Media']
 
-response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
+      studio_name = ''
+      if media['studios']['nodes']:
+          studio_name = media['studios']['nodes'][0]['name']
 
-# print(response.json())
-if response.status_code == 200:
-    data = response.json()
-    title = data['data']['Media']['title']['romaji']
-    cover = data['data']['Media']['coverImage']['large']
+      formatted_data = {
+          'id': media['id'],
+          'title': {
+              'romaji': media['title']['romaji'],
+              'english': media['title']['english'],
+              'native': media['title']['native']
+          },
+          'type': media['type'],
+          'episodes': media['episodes'],
+          'year': media['seasonYear'],
+          'genres': media['genres'],
+          'synopsis': media['description'],
+          'studio': studio_name,
+          'rating': media['averageScore'] / 10 if media['averageScore'] else None,
+          'source': media['source'],
+          'cover': media['coverImage']['extraLarge']
+      }
 
-    # get image from anilist API
-    response = requests.get(cover)
-    imageStream = BytesIO(response.content)
-    imageDecoded = cv2.imdecode(np.frombuffer(imageStream.read(), np.uint8), cv2.IMREAD_COLOR)
-    cv2.imwrite("image/new3.png", imageDecoded)
+      return formatted_data
+        
+    except Exception as e:
+        print(f"Exception when fetching anime data: {e}")
+        return None
 
-    # read feteched image from anilist API
-    # image = cv2.imread("image/new3.png") 
+        # # get image from anilist API
+        # response = requests.get(cover)
+        # imageStream = BytesIO(response.content)
+        # imageDecoded = cv2.imdecode(np.frombuffer(imageStream.read(), np.uint8), cv2.IMREAD_COLOR)
+        # cv2.imwrite("image/new3.png", imageDecoded)
 
-    # read image from local as sample
-    # only this image work for steganography while other images are not working
-    image = cv2.imread("image/capture.JPG") 
+        # # read feteched image from anilist API
+        # # image = cv2.imread("image/new3.png") 
 
-    
-    embeddedMessage = embed_to_image(image, "hallo dari iqbal")
+        # # read image from local as sample
+        # # only this image work for steganography while other images are not working
+        # image = cv2.imread("image/capture.JPG") 
 
-    # steganography image
-    cv2.imwrite("image/hasil_stego.png", embeddedMessage)
+        
+        # embeddedMessage = embed_to_image(image, "hallo dari iqbal")
 
-    # extract message
-    img = cv2.imread("image/hasil_stego.png")
-    message = extract_message(img)
-    print("Pesan disisipkan:", message)
-else:
-    print(f"Error: {response.status_code}")
+        # # steganography image
+        # cv2.imwrite("image/hasil_stego.png", embeddedMessage)
+
+        # # extract message
+        # img = cv2.imread("image/hasil_stego.png")
+        # message = extract_message(img)
+        # print("Pesan disisipkan:", message)

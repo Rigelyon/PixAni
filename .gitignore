@@ -23,6 +23,7 @@ staticfiles/
 dist/
 build/
 out/
+*/migrations/
 *.js.map
 
 # Dependency directories

@@ -11,7 +11,7 @@ from PIL import Image
 
 from core.forms import AnilistLinkForms, UserDataForm
 from core.utils.anilist import get_anime_data
-from core.utils.new_steganography import embed_data_in_image
+from core.utils.steganography import embed_data_in_image
 
 def home(request):
     form = AnilistLinkForms()
@@ -74,10 +74,10 @@ def process_image(request):
                         'native': anime_data['title']['native'],
                         'romaji': anime_data['title']['romaji']
                     },
-                    'synopsis': anime_data['description'],
+                    'synopsis': anime_data['synopsis'],
                     'type': anime_data['type'],
                     'episodes': anime_data['episodes'],
-                    'year': anime_data['seasonYear'],
+                    'year': anime_data['year'],
                     'genres': anime_data['genres'],
                     'studio': anime_data['studio'],
                     'rating': anime_data['rating'],
@@ -98,28 +98,30 @@ def process_image(request):
                 download_path = os.path.join('media', 'embedded_images', filename)
 
                 data_str = json.dumps(data_to_embed)
-                # embedded_images = embed_data_in_image(cover, data_str)
+                embedded_images = embed_data_in_image(cover, data_str)
 
-                # embedded_images.save(temp_path, format='PNG')
+                embedded_images.save(temp_path, format='PNG')
+
+                download_url = request.build_absolute_uri(f"/{download_path}")
 
                 return JsonResponse({
-                    'status': 'success',
+                    'success': True,
                     'message': 'Data embedded successfully.',
-                    'download_link': download_path,
+                    'download_url': download_url,
                     'anime_data': anime_data,
                     'user_data': user_data
                 })
 
             except Exception as e:
-                return JsonResponse({'error': str(e)}, status=500)
+                return JsonResponse({'success': False, 'error': str(e)}, status=500)
         else:
             return JsonResponse({
-                'status': 'error',
+                'success': False,
                 'message': 'Invalid form data.',
                 'errors': user_data_form.errors
             }, status=400)
         
     return JsonResponse({
-        'status': 'error',
+        'success': False,
         'message': 'Invalid request method.'
     }, status=405)

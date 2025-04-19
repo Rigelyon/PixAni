@@ -127,6 +127,9 @@
                                 <button type="submit" class="btn btn-primary" id="processButton">
                                     <i class="fas fa-download me-2"></i> Process & Download
                                 </button>
+                                <button type="button" class="btn btn-secondary" id="downloadTxtButton">
+                                    <i class="fas fa-file-alt me-2"></i> Download as TXT
+                                </button>
                             </div>
                         </form>
                         
@@ -243,6 +246,57 @@
             };
 
             dataToEmbed.textContent = JSON.stringify(dataToEmbedObj, null, 4);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const downloadTxtButton = document.getElementById('downloadTxtButton');
+
+        downloadTxtButton.addEventListener('click', function() {
+            const animeData = {{ anime|safe }};
+            const userData = {
+                personal_rating: document.querySelector('[name="personal_rating"]').value,
+                review: document.querySelector('[name="review"]').value,
+                notes: document.querySelector('[name="notes"]').value,
+                download_link_1080p: document.querySelector('[name="download_link_1080p"]').value,
+                download_link_720p: document.querySelector('[name="download_link_720p"]').value,
+                download_link_480p: document.querySelector('[name="download_link_480p"]').value,
+                download_link_360p: document.querySelector('[name="download_link_360p"]').value
+            };
+
+            const formattedData = `
+                [ID] ${animeData.id}
+                [Title English] ${animeData.title.english}
+                [Title Native] ${animeData.title.native || 'N/A'}
+                [Title Romaji] ${animeData.title.romaji || 'N/A'}
+                [Type] ${animeData.type}
+                [Episodes] ${animeData.episodes || 'N/A'}
+                [Year] ${animeData.year || 'N/A'}
+                [Genres] ${animeData.genres.join(', ')}
+                [Studio] ${animeData.studio || 'N/A'}
+                [Rating] ${animeData.rating || 'N/A'}
+                [Source] ${animeData.source || 'N/A'}
+                [Synopsis] ${animeData.synopsis || 'N/A'}
+
+                [Personal Rating] ${userData.personal_rating || 'N/A'}
+                [Review] ${userData.review || 'N/A'}
+                [Notes] ${userData.notes || 'N/A'}
+                [Download Link 1080p] ${userData.download_link_1080p || 'N/A'}
+                [Download Link 720p] ${userData.download_link_720p || 'N/A'}
+                [Download Link 480p] ${userData.download_link_480p || 'N/A'}
+                [Download Link 360p] ${userData.download_link_360p || 'N/A'}
+            `.trim();
+
+            const blob = new Blob([formattedData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${animeData.title.english.replace(/ /g, '_')}_data.txt`;
+            a.click();
+
+            URL.revokeObjectURL(url);
         });
     });
 </script>

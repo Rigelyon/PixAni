@@ -1,28 +1,47 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const decodeImageForm = document.getElementById('decodeImageForm');
-    const decodedDataContainer = document.getElementById('decodedData');
-    const decodedDataPre = decodedDataContainer.querySelector('pre');
+document.getElementById('embedBtn').addEventListener('click', function () {
+    const formData = new FormData();
+    const image = document.getElementById('imageInput').files[0];
+    const message = document.getElementById('secretMessage').value;
 
-    decodeImageForm.addEventListener('submit', function (e) {
-        e.preventDefault();
+    if (!image || !message) {
+        alert("Gambar dan pesan harus diisi!");
+        return;
+    }
 
-        const formData = new FormData(decodeImageForm);
+    formData.append('image', image);
+    formData.append('message', message);
 
-        fetch('/decode_image/', {
-            method: 'POST',
-            body: formData,
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    decodedDataPre.textContent = JSON.stringify(data.decoded_data, null, 4);
-                    decodedDataContainer.classList.remove('d-none');
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
+    fetch('/encode/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.blob())
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        document.getElementById('outputImage').style.display = 'block';
+        document.getElementById('outputImage').src = url;
+        document.getElementById('extractedMessage').innerText = '';
+    });
+});
+
+document.getElementById('extractBtn').addEventListener('click', function () {
+    const formData = new FormData();
+    const image = document.getElementById('imageInput').files[0];
+
+    if (!image) {
+        alert("Silakan upload gambar untuk diekstrak.");
+        return;
+    }
+
+    formData.append('image', image);
+
+    fetch('/decode/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(message => {
+        document.getElementById('extractedMessage').innerText = 'Pesan: ' + message;
+        document.getElementById('outputImage').style.display = 'none';
     });
 });

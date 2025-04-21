@@ -2,12 +2,12 @@ from django.db import models
 
 class AnimeRecord(models.Model):
     anilist_id = models.IntegerField(unique=True)
-    tittle_native = models.CharField(max_length=255)
-    tittle_english = models.CharField(max_length=255)
-    tittle_romaji = models.CharField(max_length=255)
-    anime_type = models.CharField(max_length=50)
+    tittle_native = models.CharField(max_length=255, null=True, blank=True)
+    tittle_english = models.CharField(max_length=255, null=True, blank=True)
+    tittle_romaji = models.CharField(max_length=255, null=True, blank=True)
+    anime_type = models.CharField(max_length=50, null=True, blank=True)
     episodes = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, null=True, blank=True)
     year = models.IntegerField(null=True, blank=True)
     genres = models.CharField(max_length=255, null=True, blank=True)
     synopsis = models.TextField(null=True, blank=True)
@@ -17,15 +17,11 @@ class AnimeRecord(models.Model):
     cover_image = models.URLField(null=True, blank=True)
 
     # User data
-    personal_rating = models.IntegerField(null=True, blank=True)
-    review = models.TextField(null=True, blank=True)
+    user_rating = models.IntegerField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
-    download_link_1080p = models.URLField(null=True, blank=True)
-    download_link_720p = models.URLField(null=True, blank=True)
-    download_link_480p = models.URLField(null=True, blank=True)
-    download_link_360p = models.URLField(null=True, blank=True)
-    download_link_240p = models.URLField(null=True, blank=True)
-    download_link_144p = models.URLField(null=True, blank=True)
+    link_1 = models.URLField(null=True, blank=True)
+    link_2 = models.URLField(null=True, blank=True)
+    link_3 = models.URLField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

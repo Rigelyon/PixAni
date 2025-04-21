@@ -216,9 +216,9 @@ if __name__ == "__main__":
         "rating": "",
         "review": "",
         "notes": "",
-        "link_1080p": "",
-        "link_720p": "",
-        "link_480p": "",
+        "link_1": "",
+        "link_2": "",
+        "link_3": "",
     }
 }
 

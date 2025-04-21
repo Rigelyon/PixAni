@@ -59,31 +59,16 @@ def process_image(request):
         user_data_form = UserDataForm(request.POST)
         if user_data_form.is_valid():
             user_data = {
-                'personal_rating': user_data_form.cleaned_data.get('personal_rating'),
-                'review': user_data_form.cleaned_data.get('review'),
-                'notes': user_data_form.cleaned_data.get('notes'),
-                'download_link_1080p': user_data_form.cleaned_data.get('download_link_1080p'),
-                'download_link_720p': user_data_form.cleaned_data.get('download_link_720p'),
-                'download_link_480p': user_data_form.cleaned_data.get('download_link_480p'),
-                'download_link_360p': user_data_form.cleaned_data.get('download_link_360p'),
+                'user_rating': user_data_form.cleaned_data.get('user_rating') or None,
+                'notes': user_data_form.cleaned_data.get('notes') or None,
+                'link_1': user_data_form.cleaned_data.get('link_1') or None,
+                'link_2': user_data_form.cleaned_data.get('link_2') or None,
+                'link_3': user_data_form.cleaned_data.get('link_3') or None,
             }
 
             data_to_embed = {
                 'anime': {
-                    'id': anime_data['id'],
-                    'title': {
-                        'english': anime_data['title']['english'],
-                        'native': anime_data['title']['native'],
-                        'romaji': anime_data['title']['romaji']
-                    },
-                    'synopsis': anime_data['synopsis'],
-                    'type': anime_data['type'],
-                    'episodes': anime_data['episodes'],
-                    'year': anime_data['year'],
-                    'genres': anime_data['genres'],
-                    'studio': anime_data['studio'],
-                    'rating': anime_data['rating'],
-                    'source': anime_data['source'],
+                    'id': anime_data['id']
                 },
                 'user_data': user_data
             }

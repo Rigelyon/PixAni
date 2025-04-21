@@ -18,63 +18,51 @@ class AnilistLinkForms(forms.Form):
     )
 
 class UserDataForm(forms.Form):
-    personal_rating = forms.FloatField(
+    user_rating = forms.FloatField(
         min_value=0,
         max_value=10,
         required=False,
         widget=forms.NumberInput(attrs={
-            'placeholder': 'Your Rating (0-10)',
+            'placeholder': 'Enter your rating here... (0-10)',
             'class': 'form-control',
-            'step': '0.1'
-        }),
-    )
-
-    review = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={
-            'placeholder': 'Your Review',
-            'class': 'form-control',
-            'rows': 3
+            'step': '0.1',
+            'maxlength': '2',
         }),
     )
 
     notes = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
-            'placeholder': 'Your Notes',
+            'placeholder': 'Enter your notes here... (max 200 characters)',
             'class': 'form-control',
-            'rows': 3
+            'rows': 3,
+            'maxlength': '200',
         }),
     )
 
-    download_link_1080p = forms.URLField(
+    link_1 = forms.URLField(
         required=False,
         widget=forms.URLInput(attrs={
-            'placeholder': '1080p Download Link',
-            'class': 'form-control'
+            'placeholder': 'Enter your link here... (max 50 characters)',
+            'class': 'form-control',
+            'maxlength': '50',
         }),
     )
 
-    download_link_720p = forms.URLField(
+    link_2 = forms.URLField(
         required=False,
         widget=forms.URLInput(attrs={
-            'placeholder': '720p Download Link',
-            'class': 'form-control'
+            'placeholder': 'Enter your link here... (max 50 characters)',
+            'class': 'form-control',
+            'maxlength': '50',
         }),
     )
 
-    download_link_480p = forms.URLField(
+    link_3 = forms.URLField(
         required=False,
         widget=forms.URLInput(attrs={
-            'placeholder': '480p Download Link',
-            'class': 'form-control'
-        }),
-    )
-
-    download_link_360p = forms.URLField(
-        required=False,
-        widget=forms.URLInput(attrs={
-            'placeholder': '360p Download Link',
-            'class': 'form-control'
+            'placeholder': 'Enter your link here... (max 50 characters)',
+            'class': 'form-control',
+            'maxlength': '50',
         }),
     )

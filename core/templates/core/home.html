@@ -150,6 +150,8 @@
                 suggestionsDropdown.style.display = 'none';
             }
         });
+
+        document.querySelector('[name="user_rating"]').value = userData.user_rating || '';
     });
 </script>
 {% endblock %}

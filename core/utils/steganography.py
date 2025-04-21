@@ -4,6 +4,7 @@ from PIL import Image
 from scipy.fftpack import dct, idct
 import json
 import base64
+import os
 
 def dct_steganography_embed(image_array, data):
     """
@@ -234,3 +235,18 @@ def decode_data_from_image(image):
         return json.loads(data_str)
     else:
         raise ValueError("No valid embedded data found in the image")
+    
+
+def placeholder_extract_data():
+    try:
+        # Use the correct directory routing
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        data_file_path = os.path.join(base_dir, 'data.json')
+        
+        with open(data_file_path, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        raise ValueError(f"The file 'data.json' was not found at {data_file_path}.")
+    except json.JSONDecodeError:
+        raise ValueError(f"Failed to decode JSON from 'data.json' at {data_file_path}.")

@@ -11,8 +11,8 @@ from PIL import Image
 
 from core.forms import AnilistLinkForms, UserDataForm
 from core.utils import anilist
-from core.utils.anilist import get_anime_data, search_suggestions
-from core.utils.steganography import embed_data_in_image, decode_data_from_image
+from core.utils.anilist import get_anime_data_by_id, get_anime_data_by_search, search_suggestions
+from core.utils.steganography import embed_data_in_image, decode_data_from_image, placeholder_extract_data
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 def home(request):
@@ -25,25 +25,25 @@ def anime_detail(request):
         if form.is_valid():
             anilist_search = form.cleaned_data['anilist_search']
 
-            anime_data = get_anime_data(anilist_search)
+            anime_data = get_anime_data_by_search(anilist_search)
             if not anime_data:
                 messages.error(request, 'Failed to retrieve Anime data.')
                 return redirect('core:home')
             
             request.session['anime_data'] = anime_data
 
-            user_data_form = UserDataForm()
+            user_data = UserDataForm()
             return render(request, 'core/anime_detail.html', {
                 'anime': anime_data,
-                'user_data_form': user_data_form
+                'user_data': user_data
             })
         
     anime_data = request.session.get('anime_data')
     if anime_data:
-        user_data_form = UserDataForm()
+        user_data = UserDataForm()
         return render(request, 'core/anime_detail.html', {
             'anime': anime_data,
-            'user_data_form': user_data_form
+            'user_data': user_data
         })
 
     return redirect('core:home')
@@ -56,14 +56,14 @@ def process_image(request):
             messages.error(request, 'No anime data found in session.', status=400)
             return redirect('core:home')
         
-        user_data_form = UserDataForm(request.POST)
-        if user_data_form.is_valid():
+        user_data = UserDataForm(request.POST)
+        if user_data.is_valid():
             user_data = {
-                'user_rating': user_data_form.cleaned_data.get('user_rating') or None,
-                'notes': user_data_form.cleaned_data.get('notes') or None,
-                'link_1': user_data_form.cleaned_data.get('link_1') or None,
-                'link_2': user_data_form.cleaned_data.get('link_2') or None,
-                'link_3': user_data_form.cleaned_data.get('link_3') or None,
+                'user_rating': user_data.cleaned_data.get('user_rating') or None,
+                'link_1':user_data.cleaned_data.get('link_1') or None,
+                'notes':user_data.cleaned_data.get('notes') or None,
+                'link_2':user_data.cleaned_data.get('link_2') or None,
+                'link_3':user_data.cleaned_data.get('link_3') or None,
             }
 
             data_to_embed = {
@@ -105,7 +105,7 @@ def process_image(request):
             return JsonResponse({
                 'success': False,
                 'message': 'Invalid form data.',
-                'errors': user_data_form.errors
+                'errors': user_data.errors
             }, status=400)
         
     return JsonResponse({
@@ -122,10 +122,11 @@ def decode_image(request):
                 return JsonResponse({'success': False, 'error': 'Invalid file upload'}, status=400)
 
             image = Image.open(uploaded_file)
-            decoded_data = decode_data_from_image(image)
+            # decoded_data = decode_data_from_image(image)
+            decoded_data = placeholder_extract_data()
 
-            anime_title = decoded_data['anime']['title']['english']
-            anime_data = get_anime_data(anime_title)
+            anime_id = decoded_data['id']
+            anime_data = get_anime_data_by_id(anime_id)
             if not anime_data:
                 return JsonResponse({'success': False, 'error': 'Failed to refetch anime data from AniList'}, status=500)
 

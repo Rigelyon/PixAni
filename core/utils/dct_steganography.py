@@ -1,23 +1,18 @@
-# copied from google collab (try and error in google colab)
-
 import numpy as np
 from PIL import Image
 from scipy.fftpack import dct, idct 
-import math # package belum terpasang
-import json # package belum terpasang
-import zlib # package belum terpasang
-import base64 # package belum terpasang
+import json 
+
 
 def text_to_binary(text):
-    """Convert text to binary string with length prefix"""
     binary = ''.join(format(ord(char), '08b') for char in text)
+
     # Tambahkan penanda awal dan panjang pesan (16 bit penanda + 16 bit panjang)
     marker = '1111000011110000'  # Penanda unik
     length_prefix = format(len(binary), '016b')  # 16-bit untuk panjang
     return marker + length_prefix + binary
 
 def binary_to_text(binary):
-    """Convert binary string to text with marker validation"""
     # Cari penanda awal
     marker = '1111000011110000'
     marker_pos = binary.find(marker)
@@ -46,17 +41,17 @@ def binary_to_text(binary):
         return ""
 
 def calculate_capacity(img_width, img_height, block_size=8):
-    """Calculate maximum message capacity in bits"""
     blocks_x = img_width // block_size
     blocks_y = img_height // block_size
     return blocks_x * blocks_y
 
 def get_frequency_position():
-    """Return fixed frequency position for consistency"""
     return (4, 3)  # Posisi tetap untuk memudahkan ekstraksi
 
-def embed_message(image_path, message, output_path, strength=1.5):
-    """Embed message into image using DCT transform"""
+def embed_message(image_path, message):
+    output_path = "media/embedded_images/stego_image.png"
+    strength=2.0
+
     try:
         # Buka gambar dan konversi ke numpy array
         img = Image.open(image_path)
@@ -126,16 +121,15 @@ def embed_message(image_path, message, output_path, strength=1.5):
             print("Peringatan: Format JPG mungkin menyebabkan kehilangan data. Disarankan menggunakan PNG.")
         
         result_img.save(output_path)
-        print(f"Pesan berhasil disisipkan ke {output_path}")
-        print(f"Kapasitas: {capacity} bit | Pesan: {required} bit | Kekuatan: {strength}")
-        return True
+        return json.dumps({ "output_path": output_path })
     
     except Exception as e:
         print(f"Error saat embedding: {str(e)}")
         return False
 
-def extract_message(image_path, strength=1.5):
-    """Extract message from stego image"""
+def extract_message(image_path):
+    strength=2.0
+
     try:
         img = Image.open(image_path)
         
@@ -194,52 +188,9 @@ def extract_message(image_path, strength=1.5):
                 if message_length > 0 and bits_collected >= message_length:
                     binary_message = binary_message[:message_length]
                     return binary_to_text(marker + length_binary + binary_message)
-        
-        return binary_to_text(marker + length_binary + binary_message)
+        result = binary_to_text(marker + length_binary + binary_message)
+        return json.dumps(result)
     
     except Exception as e:
         print(f"Error saat ekstraksi: {str(e)}")
         return ""
-
-if __name__ == "__main__":
-    # Contoh penggunaan
-    original_image = "new3.png"
-    stego_image = "stego_image1.png"
-    data = {
-    "anime": {
-        "id": 20,
-        "title": {
-            "romaji": "NARUTO", "english": "Naruto", "native": "NARUTO -ナルト-"
-        }
-    },
-    "user_data": {
-        "rating": "",
-        "review": "",
-        "notes": "",
-        "link_1": "",
-        "link_2": "",
-        "link_3": "",
-    }
-}
-
-    json_string = json.dumps(data)
-    # compressed = zlib.compress(json_string.encode('utf-8'))
-    # compressed_b64 = base64.b64encode(compressed).decode('utf-8')
-    # secret_message = "Ini adalah pesan rahasia untuk steganografi dengan DCT!"
-    
-    # Embed pesan
-    print("=== Proses Embedding ===")
-    success = embed_message(original_image, json_string, stego_image, strength=2.0)
-    
-    if success:
-        # Ekstrak pesan
-        print("\n=== Proses Ekstraksi ===")
-        extracted_message = extract_message(stego_image, strength=2.0)
-        
-        if extracted_message:
-            print("Pesan yang diekstrak:", extracted_message)
-        else:
-            print("Gagal mengekstrak pesan. Kemungkinan penyebab:")
-            print("1. Gambar telah dimodifikasi/terkompresi setelah embedding")
-            print("2. Parameter strength berbeda dengan saat embedding")
-            print("3. Format gambar tidak mendukung (gunakan PNG)")

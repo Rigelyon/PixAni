@@ -88,7 +88,8 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
+
         const searchInput = document.querySelector('[name="anilist_search"]');
         const suggestionsDropdown = document.getElementById('searchSuggestions');
 
@@ -149,9 +150,40 @@
             if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
                 suggestionsDropdown.style.display = 'none';
             }
+            
         });
 
         document.querySelector('[name="user_rating"]').value = userData.user_rating || '';
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const decodeImageForm = document.getElementById('decodeImageForm');
+
+        decodeImageForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(decodeImageForm);
+
+            fetch('{% url "core:decode_image" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "core:anime_detail" %}';
+                } else {
+                    alert(data.error || 'Failed to decode the image.');
+                }
+            })
+            .catch(error => {
+                alert('An error occurred: ' + error);
+            });
+        });
     });
 </script>
 {% endblock %}

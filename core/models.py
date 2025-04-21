@@ -19,9 +19,9 @@ class AnimeRecord(models.Model):
     # User data
     user_rating = models.IntegerField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
-    link_1 = models.URLField(null=True, blank=True)
-    link_2 = models.URLField(null=True, blank=True)
-    link_3 = models.URLField(null=True, blank=True)
+    link_1 = models.TextField(null=True, blank=True)
+    link_2 = models.TextField(null=True, blank=True)
+    link_3 = models.TextField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

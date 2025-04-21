@@ -300,12 +300,10 @@
                 [Synopsis] ${animeData.synopsis || 'N/A'}
 
                 [User Rating] ${userData.user_rating || 'N/A'}
-                [Review] ${userData.review || 'N/A'}
                 [Notes] ${userData.notes || 'N/A'}
-                [Download Link 1] ${userData.link_1 || 'N/A'}
-                [Download Link 2] ${userData.link_2 || 'N/A'}
-                [Download Link 3] ${userData.link_3 || 'N/A'}
-                [Download Link 4] ${userData.download_link_4 || 'N/A'}
+                [Link 1] ${userData.link_1 || 'N/A'}
+                [Link 2] ${userData.link_2 || 'N/A'}
+                [Link 3] ${userData.link_3 || 'N/A'}
             `.trim();
 
             const blob = new Blob([formattedData], { type: 'text/plain' });
@@ -333,24 +331,21 @@
             fetch('{% url "core:decode_image" %}', {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const userData = data.user_data;
-                        document.querySelector('[name="user_rating"]').value = userData.user_rating || '';
-                        document.querySelector('[name="notes"]').value = userData.notes || '';
-                        document.querySelector('[name="link_1"]').value = userData.link_1 || '';
-                        document.querySelector('[name="link_2"]').value = userData.link_2 || '';
-                        document.querySelector('[name="link_3"]').value = userData.link_3 || '';
-                        alert('User data successfully populated from the image!');
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    alert('Error: ' + error);
-                });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "core:anime_detail" %}';
+                } else {
+                    alert(data.error || 'Failed to decode the image.');
+                }
+            })
+            .catch(error => {
+                alert('An error occurred: ' + error);
+            });
         });
     });
 </script>

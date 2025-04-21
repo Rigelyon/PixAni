@@ -25,12 +25,23 @@ def anime_detail(request):
         if form.is_valid():
             anilist_search = form.cleaned_data['anilist_search']
 
+            # Clear session data only for new searches
+            request.session.pop('anime_data', None)
+            request.session.pop('user_data', None)
+
             anime_data = get_anime_data_by_search(anilist_search)
             if not anime_data:
                 messages.error(request, 'Failed to retrieve Anime data.')
                 return redirect('core:home')
             
             request.session['anime_data'] = anime_data
+            request.session['user_data'] = {
+                'user_rating': None,
+                'link_1': None,
+                'notes': None,
+                'link_2': None,
+                'link_3': None
+            }
 
             user_data = UserDataForm()
             return render(request, 'core/anime_detail.html', {
@@ -38,12 +49,22 @@ def anime_detail(request):
                 'user_data': user_data
             })
         
+    # Retain session data for page refreshes
     anime_data = request.session.get('anime_data')
+    user_data = request.session.get('user_data')
     if anime_data:
-        user_data = UserDataForm()
+        if not user_data:
+            user_data = {
+                'user_rating': None,
+                'link_1': None,
+                'notes': None,
+                'link_2': None,
+                'link_3': None
+            }
+        user_data_form = UserDataForm(initial=user_data)
         return render(request, 'core/anime_detail.html', {
             'anime': anime_data,
-            'user_data': user_data
+            'user_data': user_data_form,
         })
 
     return redirect('core:home')
@@ -67,6 +88,8 @@ def process_image(request):
                 'link_2':user_data.cleaned_data.get('link_2') or None,
                 'link_3':user_data.cleaned_data.get('link_3') or None,
             }
+
+            request.session['user_data'] = user_data
 
             data_to_embed = {
                 'id': anime_data['id'],
@@ -122,18 +145,24 @@ def decode_image(request):
             image = Image.open(uploaded_file)
             decoded_data_str = extract_message(image)
             
-            decoded_data = json.loads(decoded_data_str)
+            try:
+                decoded_data = json.loads(decoded_data_str)
+            except json.JSONDecodeError:
+                return JsonResponse({'success': False, 'error': 'Decoded data is not valid JSON'}, status=500)
 
             anime_id = decoded_data['id']
             anime_data = get_anime_data_by_id(anime_id)
             if not anime_data:
                 return JsonResponse({'success': False, 'error': 'Failed to refetch anime data from AniList'}, status=500)
 
-            user_data = decoded_data.get('user_data', {})
+            request.session['anime_data'] = anime_data
+            request.session['user_data'] = decoded_data['user_data']
+
             return JsonResponse({
                 'success': True,
+                'message': 'Data decoded successfully.',
                 'anime_data': anime_data,
-                'user_data': user_data
+                'user_data': decoded_data['user_data']
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)

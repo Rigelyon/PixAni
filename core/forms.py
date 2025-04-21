@@ -26,7 +26,7 @@ class UserDataForm(forms.Form):
             'placeholder': 'Enter your rating here... (0-10)',
             'class': 'form-control',
             'step': '0.1',
-            'maxlength': '2',
+            'maxlength': '4',
         }),
     )
 
@@ -40,27 +40,27 @@ class UserDataForm(forms.Form):
         }),
     )
 
-    link_1 = forms.URLField(
+    link_1 = forms.CharField(
         required=False,
-        widget=forms.URLInput(attrs={
+        widget=forms.TextInput(attrs={
             'placeholder': 'Enter your link here... (max 50 characters)',
             'class': 'form-control',
             'maxlength': '50',
         }),
     )
 
-    link_2 = forms.URLField(
+    link_2 = forms.CharField(
         required=False,
-        widget=forms.URLInput(attrs={
+        widget=forms.TextInput(attrs={
             'placeholder': 'Enter your link here... (max 50 characters)',
             'class': 'form-control',
             'maxlength': '50',
         }),
     )
 
-    link_3 = forms.URLField(
+    link_3 = forms.CharField(
         required=False,
-        widget=forms.URLInput(attrs={
+        widget=forms.TextInput(attrs={
             'placeholder': 'Enter your link here... (max 50 characters)',
             'class': 'form-control',
             'maxlength': '50',

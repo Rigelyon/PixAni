@@ -10,10 +10,10 @@ from io import BytesIO
 from PIL import Image
 
 from core.forms import AnilistLinkForms, UserDataForm
-from core.utils import anilist
 from core.utils.anilist import get_anime_data_by_id, get_anime_data_by_search, search_suggestions
-from core.utils.steganography import embed_data_in_image, decode_data_from_image, placeholder_extract_data
+from core.utils.steganography import embed_message, extract_message, test_extract_data
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.management import call_command
 
 def home(request):
     form = AnilistLinkForms()
@@ -51,6 +51,8 @@ def anime_detail(request):
 @csrf_exempt
 def process_image(request):
     if request.method == 'POST':
+        call_command('clear_embedded_images')
+
         anime_data = request.session.get('anime_data')
         if not anime_data:
             messages.error(request, 'No anime data found in session.', status=400)
@@ -67,9 +69,7 @@ def process_image(request):
             }
 
             data_to_embed = {
-                'anime': {
-                    'id': anime_data['id']
-                },
+                'id': anime_data['id'],
                 'user_data': user_data
             }
 
@@ -85,9 +85,7 @@ def process_image(request):
                 download_path = os.path.join('media', 'embedded_images', filename)
 
                 data_str = json.dumps(data_to_embed)
-                embedded_images = embed_data_in_image(cover, data_str)
-
-                embedded_images.save(temp_path, format='PNG')
+                embed_message(cover, data_str, filename=filename)
 
                 download_url = request.build_absolute_uri(f"/{download_path}")
 
@@ -122,8 +120,9 @@ def decode_image(request):
                 return JsonResponse({'success': False, 'error': 'Invalid file upload'}, status=400)
 
             image = Image.open(uploaded_file)
-            # decoded_data = decode_data_from_image(image)
-            decoded_data = placeholder_extract_data()
+            decoded_data_str = extract_message(image)
+            
+            decoded_data = json.loads(decoded_data_str)
 
             anime_id = decoded_data['id']
             anime_data = get_anime_data_by_id(anime_id)

@@ -234,13 +234,13 @@
                     downloadLink.href = data.download_url;
                     downloadLink.download = data.download_url.split('/').pop();
                 } else {
-                    alert('Error: ' + data.error);
+                    alert('Error Data: ' + data.error);
                     processButton.disabled = false;
                 }
             })
             .catch(error => {
                 processingMessage.classList.add('d-none');
-                alert('Error: ' + error);
+                alert('Error Process: ' + error);
                 processButton.disabled = false;
             });
         });

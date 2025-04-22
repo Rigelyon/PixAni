@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -100,12 +101,13 @@ def process_image(request):
                 response = requests.get(anime_data['cover'])
                 cover = Image.open(BytesIO(response.content))
 
-                filename = f"{anime_data['title']['english'].replace(' ', '_')}_cover.png"
+                safe_title = re.sub(r'[^\w\s-]', '', anime_data['title']['english']).strip().replace(' ', '_')
+                filename = f"{safe_title}_cover.png"
 
                 os.makedirs(os.path.join(settings.MEDIA_ROOT, 'embedded_images'), exist_ok=True)
 
                 temp_path = os.path.join(settings.MEDIA_ROOT, 'embedded_images', filename)
-                download_path = os.path.join('media', 'embedded_images', filename)
+                download_path = f"media/embedded_images/{filename}"
 
                 data_str = json.dumps(data_to_embed)
                 embed_message(cover, data_str, filename=filename)
